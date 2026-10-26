@@ -1,0 +1,20 @@
+{
+  "name": "mattermost-plugin-viewport-read-receipts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build:webapp": "node scripts/build-webapp.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "playwright test",
+    "package": "python3 scripts/package.py"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "esbuild": "^0.25.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "typescript": "^5.6.3"
+  }
+}

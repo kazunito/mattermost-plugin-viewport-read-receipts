@@ -1,0 +1,18 @@
+{
+  "id": "com.nito.viewport-read-receipts",
+  "name": "表示確認（既読）",
+  "description": "Web・デスクトップで投稿が前面に連続表示されたことを記録します。読了・理解・対応を証明しません。モバイルアプリは対象外。",
+  "version": "0.1.0",
+  "min_server_version": "12.0.1",
+  "server": {"executables": {"linux-amd64": "server/dist/plugin-linux-amd64", "linux-arm64": "server/dist/plugin-linux-arm64", "darwin-arm64": "server/dist/plugin-darwin-arm64"}},
+  "webapp": {"bundle_path": "webapp/dist/main.js"},
+  "settings_schema": {
+    "header": "導入前に、利用目的・対象チャネル・表示条件・閲覧できる人・保存期間を利用者へ説明してください。既読は画面表示の記録です。勤務評価や即時返信の判定には使用しないでください。",
+    "settings": [
+      {"key": "TrackingEnabled", "display_name": "表示確認を有効にする", "type": "bool", "default": false, "help_text": "利用者への説明後に有効にしてください。無効時は記録・人数・一覧のAPIを停止します。"},
+      {"key": "DwellMilliseconds", "display_name": "連続表示時間（ミリ秒）", "type": "number", "default": 1000, "help_text": "250〜10000。前面で連続表示した場合だけ記録。途中で隠れるとリセットします。"},
+      {"key": "RetentionDays", "display_name": "保存対象期間（日）", "type": "number", "default": 30, "help_text": "1〜365。投稿作成からの日数。過去の記録の有効期限は延長しません。短縮は読み出しにも直ちに適用します。"},
+      {"key": "ChannelIDs", "display_name": "対象チャネルID（カンマ区切り）", "type": "text", "default": "", "help_text": "空欄は全チャネル・DM・グループDM。指定するとそのチャネルだけ。スレッドにも適用。既読一覧は投稿者本人のみ閲覧できます。"}
+    ]
+  }
+}

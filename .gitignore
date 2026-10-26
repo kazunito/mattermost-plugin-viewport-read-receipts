@@ -1,0 +1,8 @@
+work/
+node_modules/
+webapp/dist/
+server/dist/
+dist/
+playwright-report/
+test-results/
+.DS_Store
