@@ -118,4 +118,4 @@ GitHub Actionsのチェック・テスト・配布ファイル作成用設定を
 
 ## ライセンス
 
-公開用ライセンスは選択待ちです。公開前にLICENSEを追加します。依存コンポーネントについては [NOTICE](NOTICE)、`go.mod` と `webapp/package-lock.json` を参照してください。
+本プロジェクトのソースコードは [Apache License 2.0](LICENSE) で公開します。依存コンポーネントにはそれぞれのライセンスが適用されます。[NOTICE](NOTICE)、`go.mod` と `webapp/package-lock.json` を参照してください。Mattermost公式の製品ではありません。

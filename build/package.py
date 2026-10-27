@@ -21,9 +21,7 @@ for platform, relative in manifest['server']['executables'].items():
 subprocess.run(['npm', 'run', 'build'], cwd=root / 'webapp', check=True)
 filename = f"{manifest['id']}-{manifest['version']}.tar.gz"
 bundle = out / filename
-files = ['plugin.json', 'NOTICE', manifest['webapp']['bundle_path'], *manifest['server']['executables'].values()]
-if (root / 'LICENSE').is_file():
-    files.append('LICENSE')
+files = ['plugin.json', 'LICENSE', 'NOTICE', manifest['webapp']['bundle_path'], *manifest['server']['executables'].values()]
 with tarfile.open(bundle, 'w:gz') as archive:
     for relative in files:
         archive.add(root / relative, arcname=f"{manifest['id']}/{relative}")
