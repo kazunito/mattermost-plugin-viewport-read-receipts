@@ -1,8 +1,8 @@
 import React from 'react';
 import * as ReactDOM from 'react-dom';
 import {createRoot} from 'react-dom/client';
-import type {Post,State} from '../webapp/src/types';
-import {Dwell,isDisplayed,findTarget} from '../webapp/src/visibility';
+import type {Post,State} from '../src/types';
+import {Dwell,isDisplayed,findTarget} from '../src/visibility';
 const IDs={author:'a'.repeat(26),viewer:'b'.repeat(26),channel:'c'.repeat(26),p1:'d'.repeat(26),p2:'e'.repeat(26),reply:'f'.repeat(26),own:'g'.repeat(26)};
 let state: State={entities:{users:{currentUserId:IDs.viewer},posts:{posts:{}}}};
 const make=(id: string,user=IDs.author,message='明日の作業は午前9時から開始します。'): Post=>({id,user_id:user,channel_id:IDs.channel,create_at:Date.now(),message});

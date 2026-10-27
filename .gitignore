@@ -1,8 +1,13 @@
-work/
+# Local scratch files and dependencies
+/work/
 node_modules/
-webapp/dist/
-server/dist/
-dist/
+.DS_Store
+
+# Build output (upload tar.gz files are distributed separately)
+/dist/
+/server/dist/
+/webapp/dist/
+
+# Browser test output
 playwright-report/
 test-results/
-.DS_Store

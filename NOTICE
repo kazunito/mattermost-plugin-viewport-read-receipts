@@ -1,0 +1,17 @@
+Mattermost Viewport Read Receipts
+
+This is an independent plugin. It is not an official Mattermost product.
+
+The server uses the Mattermost public Go plugin SDK:
+  github.com/mattermost/mattermost/server/public v0.1.21
+  https://github.com/mattermost/mattermost/tree/server/public/v0.1.21/server/public
+  Copyright Mattermost, Inc.
+  The SDK's license text is in its LICENSE.txt file.
+
+Runtime JavaScript uses React and ReactDOM provided by the host Mattermost
+web application; it does not bundle separate copies of those libraries.
+
+Go dependencies and exact versions are listed in go.mod and go.sum.
+Web build and test dependencies are listed in webapp/package.json and
+webapp/package-lock.json. Third-party components remain under their own
+licenses; selecting a license for this plugin does not relicense them.

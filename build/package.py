@@ -16,12 +16,14 @@ for platform, relative in manifest['server']['executables'].items():
     target.parent.mkdir(parents=True, exist_ok=True)
     goos, goarch = platform.split('-', 1)
     env = dict(os.environ, GOOS=goos, GOARCH=goarch, CGO_ENABLED='0')
-    subprocess.run(['go', 'build', '-trimpath', '-ldflags=-s -w', '-o', str(target), './server'], cwd=root, env=env, check=True)
+    subprocess.run(['go', 'build', '-buildvcs=false', '-trimpath', '-ldflags=-s -w', '-o', str(target), './server'], cwd=root, env=env, check=True)
     target.chmod(0o755)
-subprocess.run(['npm', 'run', 'build:webapp'], cwd=root, check=True)
+subprocess.run(['npm', 'run', 'build'], cwd=root / 'webapp', check=True)
 filename = f"{manifest['id']}-{manifest['version']}.tar.gz"
 bundle = out / filename
-files = ['plugin.json', manifest['webapp']['bundle_path'], *manifest['server']['executables'].values()]
+files = ['plugin.json', 'NOTICE', manifest['webapp']['bundle_path'], *manifest['server']['executables'].values()]
+if (root / 'LICENSE').is_file():
+    files.append('LICENSE')
 with tarfile.open(bundle, 'w:gz') as archive:
     for relative in files:
         archive.add(root / relative, arcname=f"{manifest['id']}/{relative}")

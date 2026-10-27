@@ -108,9 +108,9 @@ test('計測中のタイマー停止を連続表示に加算しない',async({pa
  expect(result).toEqual([false,false,false,false]);
 });
 test('実装した表示画面のプレビューを保存',async({page})=>{
- await setup(page);await page.screenshot({path:'work/preview-channel.png',fullPage:true});
+ await setup(page);await page.screenshot({path:'../work/preview-channel.png',fullPage:true});
  await page.getByRole('button',{name:'既読 3人。表示済みの人を確認'}).click();await expect(page.getByRole('dialog')).toContainText('佐藤 花子');
- await page.screenshot({path:'work/preview-readers.png',fullPage:true});
+ await page.screenshot({path:'../work/preview-readers.png',fullPage:true});
 });
 test('添付ファイルだけの投稿も、添付領域が表示された場合に記録',async({page})=>{
  const mock=await setup(page,{mode:'offscreen'});

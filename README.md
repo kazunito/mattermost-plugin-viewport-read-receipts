@@ -2,7 +2,7 @@
 
 Team Edition 12.0.1を対象に作成した独自プラグインです。チャネル・DM・グループDM・スレッドの投稿が、Web／デスクトップの前面に連続表示されたことを記録します。メンションの有無やチャネルの最終閲覧時刻では判定しません。
 
-**現在は導入前の候補版です。独立したブラウザ検証画面とサーバーAPIテストで確認していますが、Mattermost 12.0.1実機へのインストール・実ユーザー間の動作は未確認です。本番への反映は行っていません。**
+**実機でのインストール、既読人数と名前一覧の基本表示について利用者から動作報告を受けています。スレッド・画面外・別タブなどの判定と、実際の複数アカウントによる一連の受入確認は継続中です。** 自動テストは独立した検証画面と模擬APIを使用しており、実機での確認とは区別しています。
 
 ## 表示とプライバシー
 
@@ -47,7 +47,7 @@ Team Edition 12.0.1を対象に作成した独自プラグインです。チャ�
 
 ## 導入
 
-詳細は [docs/導入と受入確認.md](docs/導入と受入確認.md) を参照してください。インストール用ファイルは `dist/com.nito.viewport-read-receipts-0.1.0.tar.gz` です。
+詳細は [docs/導入と受入確認.md](docs/導入と受入確認.md) を参照してください。インストール用ファイルは `dist/com.nito.viewport-read-receipts-0.1.1.tar.gz` です。
 
 初期状態では **TrackingEnabled=false** です。まず検証用チャネルだけを指定し、利用目的・対象・誰に何が見えるか・保存期間を利用者に説明したうえで有効化してください。サーバーの設定やプラグイン署名ポリシーによっては独自プラグインのアップロードが許可されていない場合があります。
 
@@ -62,24 +62,60 @@ Team Edition 12.0.1を対象に作成した独自プラグインです。チャ�
 
 設定変更の画面側への反映は最大約30秒です。再読み込みで直ちに取得できます。サーバー側の無効化・対象制限は次のAPI要求から適用します。
 
-## 開発・ビルド
+## フォルダ構成
 
-作業ディレクトリ: `/Users/nito/Code/mattermost-plugin-viewport-read-receipts`
-
-```sh
-npm ci
-npm run typecheck
-npm run build:webapp
-go test -race ./server
-go vet ./server
-npm test
-npm run package
+```text
+mattermost-plugin-viewport-read-receipts/
+├── .github/workflows/     # 公開後の自動チェック
+├── assets/               # 架空データによる画面例
+├── build/                # 配布用パッケージの作成処理
+├── docs/                 # 導入・仕様・確認状況
+├── server/               # Goのサーバー処理とテスト
+├── webapp/
+│   ├── src/              # 画面表示と表示検知
+│   ├── tests/            # ブラウザテストと検証用画面
+│   ├── package.json      # Web依存管理と実行コマンド
+│   └── playwright.config.ts
+├── dist/                 # 生成したインストール用tar.gz（Git管理外）
+├── Makefile
+├── go.mod
+└── plugin.json
 ```
 
-Go 1.24.6以降、Node.js・npm、Python 3が必要です。SDKは公開版 `github.com/mattermost/mattermost/server/public v0.1.21` に固定しています。12.0.1のソースでも利用APIの存在を確認しました。ブラウザテストはmacOSのGoogle Chromeを既定で使用します。実機のMattermostへの接続は行いません。
+## 開発・ビルド
 
-`npm run package` はLinux amd64／arm64、macOS arm64のサーバーバイナリとWebバンドルを作成し、アップロード用tar.gzとSHA256SUMSを出力します。
+Go 1.24.6以降、Node.js 22以降（開発環境の指定は `.nvmrc`）、npm、Python 3、makeが必要です。リポジトリのルートで実行します。
+
+```sh
+make deps
+npm --prefix webapp exec -- playwright install chromium
+make check-style
+make test
+make dist
+```
+
+Linuxでブラウザのシステム依存パッケージも必要な場合は、Playwrightの [CI手順](https://playwright.dev/docs/ci-intro) に従い `playwright install --with-deps chromium` を実行します。既にインストールしたブラウザを使う場合だけ、`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` に実行ファイルのパスを指定できます。特定の利用者やOSのパスを既定値にはしていません。フォーカス切り替えの検証に対応するため、既定は `channel: chromium` の新しいヘッドレスモードです。[Playwrightのブラウザ説明](https://playwright.dev/docs/browsers#chromium-new-headless-mode) を参照してください。
+
+`make dist` はLinux amd64／arm64、macOS arm64のサーバーバイナリとWebバンドルを作成し、`dist/` にアップロード用tar.gzと `SHA256SUMS` を出力します。SDKは公開版 `github.com/mattermost/mattermost/server/public v0.1.21` に固定し、12.0.1のソースでも利用APIの存在を確認しています。
+
+## 画面例
+
+以下は実装したWebバンドルを検証用画面に読み込んだものです。名前・本文は架空データで、実運用の投稿や利用者情報は含みません。
+
+![投稿ごとの既読人数](assets/preview-channel.png)
+
+![投稿者だけが開ける表示済みの人の一覧](assets/preview-readers.png)
+
+## 公開と配布
+
+ソースはGitで管理し、インストール用tar.gzと `SHA256SUMS` は [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) 等で別途配布する方針です。GitHubが自動で作成するソースアーカイブと、Mattermostにアップロードするインストール用tar.gzは異なります。
+
+GitHub Actionsのチェック・テスト・配布ファイル作成用設定を同梱しています。リモート上での実行はまだ確認していません。公開の手順は [公開とリリース](docs/公開とリリース.md) を参照してください。
 
 ## 実装と検証の根拠
 
-[docs/設計と検証.md](docs/設計と検証.md) に固定バージョンのソース参照・テスト範囲・未確認事項を記載しています。
+[設計と検証](docs/設計と検証.md)、[確認状況](docs/検証結果.md)、[変更履歴](CHANGELOG.md) を参照してください。
+
+## ライセンス
+
+公開用ライセンスは選択待ちです。公開前にLICENSEを追加します。依存コンポーネントについては [NOTICE](NOTICE)、`go.mod` と `webapp/package-lock.json` を参照してください。

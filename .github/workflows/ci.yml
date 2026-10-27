@@ -1,0 +1,48 @@
+name: Test and build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+      - name: Install web dependencies
+        run: make deps
+      - name: Install test browser
+        run: npm --prefix webapp exec -- playwright install --with-deps chromium
+      - name: Check and test
+        run: make check-style test
+      - name: Build installation bundle
+        run: make dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installation-bundle
+          path: |
+            dist/*.tar.gz
+            dist/SHA256SUMS
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-diagnostics
+          path: |
+            webapp/test-results/
+            work/browser-tests.json
+          retention-days: 7
