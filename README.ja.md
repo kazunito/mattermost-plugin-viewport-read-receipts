@@ -112,7 +112,7 @@ Linuxでブラウザのシステム依存パッケージも必要な場合は、
 
 ソースはGitで管理し、インストール用tar.gzと `SHA256SUMS` は [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) 等で別途配布する方針です。GitHubが自動で作成するソースアーカイブと、Mattermostにアップロードするインストール用tar.gzは異なります。
 
-GitHub Actionsのチェック・テスト・配布ファイル作成用設定を同梱しています。リモート上での実行はまだ確認していません。公開の手順は [公開とリリース](docs/公開とリリース.md) を参照してください。
+GitHub Actionsでもチェック・テスト・配布ファイル作成に成功しています。[実行結果](https://github.com/kazunito/mattermost-plugin-viewport-read-receipts/actions/runs/40430355336) を参照してください。公開の手順は [公開とリリース](docs/公開とリリース.md) を参照してください。
 
 ## 実装と検証の根拠
 
