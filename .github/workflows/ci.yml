@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
@@ -26,7 +26,10 @@ jobs:
       - name: Install web dependencies
         run: make deps
       - name: Install test browser
-        run: npm --prefix webapp exec -- playwright install --with-deps chromium
+        working-directory: webapp
+        # GitHub-hosted Ubuntu includes the system libraries used by Chrome.
+        # The full Chromium channel is used; the separate headless shell is not needed.
+        run: npx playwright install --no-shell chromium
       - name: Check and test
         run: make check-style test
       - name: Build installation bundle
