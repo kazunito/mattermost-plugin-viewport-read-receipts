@@ -1,4 +1,4 @@
-module local/mattermost-plugin-viewport-read-receipts
+module github.com/kazunito/mattermost-plugin-viewport-read-receipts
 
 go 1.24.6
 

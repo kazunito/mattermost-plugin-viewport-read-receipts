@@ -1,90 +1,98 @@
-# Viewport Read Receipts — Mattermost向け既読プラグイン
+# Viewport Read Receipts for Mattermost
 
-Team Edition 12.0.1を対象に作成した独自プラグインです。チャネル・DM・グループDM・スレッドの投稿が、Web／デスクトップの前面に連続表示されたことを記録します。メンションの有無やチャネルの最終閲覧時刻では判定しません。
+English | [日本語](README.ja.md)
 
-**実機でのインストール、既読人数と名前一覧の基本表示について利用者から動作報告を受けています。スレッド・画面外・別タブなどの判定と、実際の複数アカウントによる一連の受入確認は継続中です。** 自動テストは独立した検証画面と模擬APIを使用しており、実機での確認とは区別しています。
+A community plugin for **Mattermost Team Edition 12.0.1** that records when a post is displayed in the foreground of the web or desktop client. Opening a channel alone does not mark every post as read, and no mention is required.
 
-## 表示とプライバシー
+**Status:** Installation, reader counts, and the reader list have been reported working on a real Mattermost server. End-to-end acceptance testing with separate accounts, off-screen posts, background tabs, and every thread view is still in progress. Automated tests use a standalone browser fixture and mock APIs; they are not a substitute for server acceptance testing.
 
-- 投稿のフッターに、目のアイコンと「既読 3」などの人数を表示します。投稿者本人は人数に含みません。
-- 投稿者だけがクリックして既読者の名前・ユーザー名を確認できます。システム管理者でも投稿者でなければ、この一覧APIは利用できません。
-- 同じ投稿をチャネル・右側スレッド・スレッド画面で開いた場合、記録は共通です。親投稿と各返信は独立です。
-- 他のメンバーには人数のみ表示します。「未読者名」「閲覧時刻」「勤務状況」は表示しません。
-- プラグインの保存データは投稿ごとのユーザーID集合と保存対象日数です。正確な閲覧時刻、本文、IPアドレス、端末情報を保存データに含めません。名前は一覧を開く際にMattermostから取得します。
-- 対象投稿に現在アクセスできるチャネルメンバーだけがAPIを利用できます。脱退者・無効化ユーザーは人数・一覧から除外します。
-- 通常のMattermost／プロキシのアクセスログ、DBの管理情報、バックアップ等まで時刻情報を消す機能ではありません。基盤側のログ保持・バックアップ管理は別途必要です。
+The current plugin interface and administrative settings are in Japanese. This repository provides both English and Japanese documentation. This is an independent project, not an official Mattermost product.
 
-## 「既読」の定義
+## What users see
 
-初期値は次の条件を**連続1秒**満たすことです。文字数に応じた読了時間ではありません。
+- An eye icon and a reader count, such as `既読 3`, below each post.
+- Only the **post author** can click the badge to see reader names and usernames. Being a system administrator does not grant access to another author's reader list through this plugin's API.
+- Other current channel members can see the count, but not the reader list.
+- The author is excluded from the count. Viewing the same post in another tab or another supported view does not count the same user twice.
+- A thread's parent post and each reply are tracked independently. The same post ID shares one receipt across channel and thread views.
 
-1. ブラウザの `visibilityState` が `visible`、かつ `document.hasFocus()` が真。
-2. 本文の横幅の50%以上、縦方向は「本文の高さとスクロール表示領域の高さの小さい方」の50%以上が表示されている。
-3. 祖先要素のスクロール・折り畳みでクリップされた領域を除外する。
-4. 表示部分の5点を調べ、3点以上で本文が最前面にある。ダイアログ等による遮蔽を除外する。
-5. 条件が外れた場合は計測をリセット。250msを超える計測間隔の空白もリセット。
+The following screenshots use fictional content in a development fixture. They are not screenshots of production conversations.
 
-本文がない添付のみの投稿は添付領域で判定します。本文と添付がある投稿では本文表示の確認であり、添付ファイルを開いたことは意味しません。長文は一部の表示でも条件を満たすことがあり、全文を読んだ証明にはなりません。折り畳みが小さすぎる場合は展開が必要です。
+![Reader counts below individual posts](assets/preview-channel.png)
 
-計測は100ms間隔とスクロール等のイベントで行います。人数は約5秒間隔で更新します。ネットワーク・処理遅延があるため「ちょうど1秒後に他の人の画面が更新される」保証はありません。
+![Reader list available only to the post author](assets/preview-readers.png)
 
-## 対象と制限
+## What “read” means
 
-| 項目 | 対応方針 |
+The default requires **one continuous second** with all of the following conditions:
+
+1. The document is visible and has focus.
+2. At least 50% of the post's width is visible. The required visible height is 50% of the smaller of the content height and the scroll viewport height.
+3. Clipping by scroll containers and collapsed content is taken into account.
+4. At least three of five sampled points are exposed, rather than covered by another element such as a dialog.
+
+Leaving the visible area, losing focus, or hiding the document resets the timer. Sampling gaps longer than 250 ms also reset it. Visibility is sampled every 100 ms and on relevant events. Counts refresh approximately every five seconds, subject to network and processing delays.
+
+For file-only posts, the attachment area is checked. For posts containing text and attachments, displaying the text does not prove that an attachment was opened. Part of a long post may satisfy the display condition; it does not prove the entire post was read. A small collapsed area may require expansion before it qualifies.
+
+**A receipt means the display condition was met. It does not prove attention, reading, understanding, or availability to respond.** A missing receipt is not proof that a user has not seen the message.
+
+## Privacy and access control
+
+- Receipt values contain user IDs and the retention-day setting, not precise viewing timestamps, message text, IP addresses, or device details.
+- Names are retrieved from Mattermost when the author requests the list.
+- Requests require an authenticated session, current channel membership, and channel-read permission. Former members and deactivated users are excluded from counts and reader lists.
+- There is no named “unread users” list.
+- Normal Mattermost, database, reverse-proxy, and backup records are outside the scope of this plugin's receipt schema.
+- Clients report their own display events. These receipts are not tamper-proof audit evidence.
+
+Explain the purpose, scope, visibility, and retention policy to users before enabling tracking. Do not use these display receipts as proof of work performance or an obligation to reply immediately.
+
+## Supported scope and limitations
+
+| Area | Scope |
 |---|---|
-| 通常の公開／非公開チャネル、DM、グループDM | 対象。チーム有料ライセンスに依存するAPIは使用しない |
-| チャネル通常表示、右側スレッド、スレッド画面の親投稿・返信 | 対象の表示コンテナを12.0.1ソースで確認。実機確認は後述 |
-| Web・デスクトップ | 同じWebプラグインで対応する設計。実デスクトップアプリは未検証 |
-| スマートフォンのネイティブアプリ | 対象外。モバイルアプリのセッションからの記録要求も拒否 |
-| スマートフォンのWebブラウザ | 同じWebアプリがプラグインをロードした場合は動作対象。ネイティブアプリと区別する |
-| システム投稿・独自のカスタム投稿タイプ | 対象外。標準投稿（typeが空）のみ |
-| 検索結果・保存済み投稿等の特殊表示 | 表示記録の対象外。通常／スレッドのコンテナ以外では記録しない |
-| 変更された本文 | 投稿ID単位の記録を維持。編集後の再読を証明しない |
-| ネットワーク切断 | サーバー保存できた分のみ。再表示で再計測。未送信履歴を永続保存しない |
-| 名前が一覧にない人 | 未閲覧の証明ではない。モバイル閲覧、通信失敗、対象外表示等があり得る |
-| 改ざん耐性 | クライアントからの申告方式。自分の既読をAPIで偽装する利用者を検出する仕組みではない |
-| 画面を実際に見ていたか | 注意・読了・理解・対応可能な状態を証明しない。OSや外部機器の画面状態を完全には検出できない |
+| Public/private channels, DMs, and group DMs | Designed to work without paid-license-specific APIs |
+| Main channel view, right-hand thread, and Threads view | Standard post containers are targeted; individual server acceptance tests remain necessary |
+| Web and desktop | Share the web plugin; the actual desktop application still requires acceptance testing |
+| Native mobile apps | Not supported; receipt writes from mobile-app sessions are rejected |
+| Mobile web browsers | May participate if they load the same web plugin |
+| System messages and custom post types | Not tracked; only standard posts with an empty type are tracked |
+| Search results and special saved-post views | Not tracked as display events |
+| Edited posts | Existing receipt remains associated with the post ID; it does not prove the edit was read |
+| Offline use | Only successfully saved receipts count; unsent history is not persisted |
+| OS-level visibility and attention | Cannot be fully established by browser APIs |
 
-## 導入
+This plugin uses DOM selectors verified against the Mattermost 12.0.1 source. A Mattermost upgrade or another plugin may require adapter changes. Load, restart recovery, and database expiry behavior have not all been validated on a real server.
 
-詳細は [docs/導入と受入確認.md](docs/導入と受入確認.md) を参照してください。インストール用ファイルは `dist/com.nito.viewport-read-receipts-0.1.2.tar.gz` です。
+## Installation
 
-初期状態では **TrackingEnabled=false** です。まず検証用チャネルだけを指定し、利用目的・対象・誰に何が見えるか・保存期間を利用者に説明したうえで有効化してください。サーバーの設定やプラグイン署名ポリシーによっては独自プラグインのアップロードが許可されていない場合があります。
+Download **`com.nito.viewport-read-receipts-0.1.2.tar.gz`** and **`SHA256SUMS`** from [Releases](https://github.com/kazunito/mattermost-plugin-viewport-read-receipts/releases). GitHub's automatically generated source archives are not the installation bundle.
 
-| 設定 | 初期値 | 説明 |
+1. Verify the archive checksum against `SHA256SUMS`.
+2. In the Mattermost System Console, open plugin management and upload the installation archive. Your server must permit installation of custom plugins under its own policy.
+3. Enable the plugin. **Tracking is disabled by default** through the separate `TrackingEnabled` setting.
+4. Set `ChannelIDs` to a limited test channel initially, explain the policy to participants, and then enable tracking.
+5. Reload the web or desktop client and complete acceptance tests with separate author and reader accounts.
+
+The detailed [installation and acceptance guide](docs/導入と受入確認.md) is currently in Japanese.
+
+| Setting key | Default | Meaning |
 |---|---|---|
-| TrackingEnabled | false | 記録・人数・一覧のAPIを有効化 |
-| DwellMilliseconds | 1000 | 連続表示時間。250〜10000ms |
-| RetentionDays | 30 | 投稿作成からの日数。1〜365日 |
-| ChannelIDs | 空欄 | 対象チャネルIDをカンマ区切り。空欄は全対象種別 |
+| `TrackingEnabled` | `false` | Enables receipt writes, counts, and lists |
+| `DwellMilliseconds` | `1000` | Continuous display duration, 250–10000 ms |
+| `RetentionDays` | `30` | Eligible period after post creation, 1–365 days |
+| `ChannelIDs` | Empty | Comma-separated allowed channel IDs; empty means all supported conversation types |
 
-保存期限は最初の閲覧からではなく**投稿作成時刻を起点**に計算します。同じ人の再表示や追加の読者によって期限を延長しません。期間設定を延ばしても既存レコードの期限は延長しません。短縮時は取得時の対象判定にも直ちに適用します。ただし、すでに保存したKVの物理的な削除期限は、次の更新がなければ以前の期限のままです。厳格な即時消去が必要な場合はそのまま期間設定を変更せず、別途データ消去手順を整備してください。投稿削除時にも記録の削除を要求します。
+Retention is anchored to **post creation**, not first viewing. Repeated views and additional readers do not extend existing receipt expiry. Increasing the retention setting does not extend an existing record's deadline. Shortening it immediately restricts API eligibility, but an existing KV entry can retain its previous physical expiry until updated. Strict immediate erasure requires a separate data-removal procedure. Post deletion also requests deletion of its receipt.
 
-設定変更の画面側への反映は最大約30秒です。再読み込みで直ちに取得できます。サーバー側の無効化・対象制限は次のAPI要求から適用します。
+Client configuration refreshes about every 30 seconds; reload to fetch it immediately. Server restrictions apply to the next request. Disabling the plugin's tracking setting stops the APIs but does not immediately erase stored receipts or backups.
 
-## フォルダ構成
+## Development
 
-```text
-mattermost-plugin-viewport-read-receipts/
-├── .github/workflows/     # 公開後の自動チェック
-├── assets/               # 架空データによる画面例
-├── build/                # 配布用パッケージの作成処理
-├── docs/                 # 導入・仕様・確認状況
-├── server/               # Goのサーバー処理とテスト
-├── webapp/
-│   ├── src/              # 画面表示と表示検知
-│   ├── tests/            # ブラウザテストと検証用画面
-│   ├── package.json      # Web依存管理と実行コマンド
-│   └── playwright.config.ts
-├── dist/                 # 生成したインストール用tar.gz（Git管理外）
-├── Makefile
-├── go.mod
-└── plugin.json
-```
+Requirements: Go 1.24.6 or later, Node.js 22 or later (the development version is in `.nvmrc`), npm, Python 3, and make.
 
-## 開発・ビルド
-
-Go 1.24.6以降、Node.js 22以降（開発環境の指定は `.nvmrc`）、npm、Python 3、makeが必要です。リポジトリのルートで実行します。
+Run from the repository root:
 
 ```sh
 make deps
@@ -94,28 +102,27 @@ make test
 make dist
 ```
 
-Linuxでブラウザのシステム依存パッケージも必要な場合は、Playwrightの [CI手順](https://playwright.dev/docs/ci-intro) に従い `playwright install --with-deps chromium` を実行します。既にインストールしたブラウザを使う場合だけ、`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` に実行ファイルのパスを指定できます。特定の利用者やOSのパスを既定値にはしていません。フォーカス切り替えの検証に対応するため、既定は `channel: chromium` の新しいヘッドレスモードです。[Playwrightのブラウザ説明](https://playwright.dev/docs/browsers#chromium-new-headless-mode) を参照してください。
+On Linux, [Playwright's CI instructions](https://playwright.dev/docs/ci-intro) cover system dependencies, including `playwright install --with-deps chromium` where required. Tests use the downloaded Chromium with `channel: chromium` (new headless mode). Optionally set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to use an existing browser; no personal browser path is hard-coded.
 
-`make dist` はLinux amd64／arm64、macOS arm64のサーバーバイナリとWebバンドルを作成し、`dist/` にアップロード用tar.gzと `SHA256SUMS` を出力します。SDKは公開版 `github.com/mattermost/mattermost/server/public v0.1.21` に固定し、12.0.1のソースでも利用APIの存在を確認しています。
+```text
+.github/workflows/  GitHub Actions checks
+assets/            Screenshots with fictional data
+build/             Installation bundle creation
+server/            Go server code and tests
+webapp/src/        Receipt UI and display detection
+webapp/tests/      Browser tests and standalone fixture
+docs/              Detailed Japanese documentation
+plugin.json        Plugin identity and settings
+Makefile           Dependency, check, test, and distribution commands
+dist/              Generated installation archives (not tracked)
+```
 
-## 画面例
+`make dist` builds server executables for Linux amd64/arm64 and macOS arm64, the web bundle, and an archive with `LICENSE` and `NOTICE` under `dist/`. The plugin ID remains `com.nito.viewport-read-receipts` for compatibility with existing installations.
 
-以下は実装したWebバンドルを検証用画面に読み込んだものです。名前・本文は架空データで、実運用の投稿や利用者情報は含みません。
+## Validation
 
-![投稿ごとの既読人数](assets/preview-channel.png)
+The local suite has 21 browser tests, server tests with the race detector, static checks, type checks, and bundle verification. See [verification details](docs/検証結果.md), [design notes](docs/設計と検証.md), and the [changelog](CHANGELOG.md) in Japanese for the exact scope and remaining acceptance items. GitHub Actions results should be checked separately from local results.
 
-![投稿者だけが開ける表示済みの人の一覧](assets/preview-readers.png)
+## License
 
-## 公開と配布
-
-ソースはGitで管理し、インストール用tar.gzと `SHA256SUMS` は [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) 等で別途配布する方針です。GitHubが自動で作成するソースアーカイブと、Mattermostにアップロードするインストール用tar.gzは異なります。
-
-GitHub Actionsのチェック・テスト・配布ファイル作成用設定を同梱しています。リモート上での実行はまだ確認していません。公開の手順は [公開とリリース](docs/公開とリリース.md) を参照してください。
-
-## 実装と検証の根拠
-
-[設計と検証](docs/設計と検証.md)、[確認状況](docs/検証結果.md)、[変更履歴](CHANGELOG.md) を参照してください。
-
-## ライセンス
-
-本プロジェクトのソースコードは [Apache License 2.0](LICENSE) で公開します。依存コンポーネントにはそれぞれのライセンスが適用されます。[NOTICE](NOTICE)、`go.mod` と `webapp/package-lock.json` を参照してください。Mattermost公式の製品ではありません。
+The project source is licensed under [Apache License 2.0](LICENSE). Dependencies remain under their respective licenses; see [NOTICE](NOTICE), `go.mod`, and `webapp/package-lock.json`.
