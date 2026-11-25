@@ -1,5 +1,10 @@
 import {Batch, Config, Count, ID, Post, Store} from './types';
 import {Dwell, findTarget, isDisplayed} from './visibility';
+// Standard posts plus quoted replies from the Quote Reply plugin
+// (com.nito.quote-reply), which renders this plugin's component itself.
+// System messages and other custom post types stay excluded.
+export const QUOTED_REPLY_TYPE='custom_quote_reply';
+export const trackableType=(type?: string)=>!type || type===QUOTED_REPLY_TYPE;
 interface Instance {anchor: HTMLElement; postID: string; dwell: Dwell; target: HTMLElement | null}
 const emptyConfig: Config={enabled:false,dwell_ms:1000,retention_days:30,channel_ids:[]};
 export class Runtime {
@@ -70,7 +75,7 @@ export class Runtime {
   return ()=> {this.instances.delete(instance);};
  }
  eligible(post: Post | undefined): post is Post {
-  return Boolean(this.config.enabled && post && !post.delete_at && !post.type &&
+  return Boolean(this.config.enabled && post && !post.delete_at && trackableType(post.type) &&
    Date.now()-post.create_at<this.config.retention_days*86400000 &&
    (this.config.channel_ids.length===0 || this.config.channel_ids.includes(post.channel_id)));
  }

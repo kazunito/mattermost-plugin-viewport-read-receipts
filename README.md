@@ -57,7 +57,7 @@ Explain the purpose, scope, visibility, and retention policy to users before ena
 | Web and desktop | Share the web plugin; the actual desktop application still requires acceptance testing |
 | Native mobile apps | Not supported; receipt writes from mobile-app sessions are rejected |
 | Mobile web browsers | May participate if they load the same web plugin |
-| System messages and custom post types | Not tracked; only standard posts with an empty type are tracked |
+| System messages and custom post types | Not tracked; only standard posts (empty type) and quoted replies of the [Quote Reply](https://github.com/kazunito/mattermost-plugin-quote-reply) plugin (`custom_quote_reply`) are tracked |
 | Search results and special saved-post views | Not tracked as display events |
 | Edited posts | Existing receipt remains associated with the post ID; it does not prove the edit was read |
 | Offline use | Only successfully saved receipts count; unsent history is not persisted |
@@ -67,7 +67,7 @@ This plugin uses DOM selectors verified against the Mattermost 12.0.1 source. A 
 
 ## Installation
 
-Download **`com.nito.viewport-read-receipts-0.1.2.tar.gz`** and **`SHA256SUMS`** from [Releases](https://github.com/kazunito/mattermost-plugin-viewport-read-receipts/releases). GitHub's automatically generated source archives are not the installation bundle.
+Download **`com.nito.viewport-read-receipts-0.1.3.tar.gz`** and **`SHA256SUMS`** from [Releases](https://github.com/kazunito/mattermost-plugin-viewport-read-receipts/releases). GitHub's automatically generated source archives are not the installation bundle.
 
 1. Verify the archive checksum against `SHA256SUMS`.
 2. In the Mattermost System Console, open plugin management and upload the installation archive. Your server must permit installation of custom plugins under its own policy.
@@ -121,7 +121,7 @@ dist/              Generated installation archives (not tracked)
 
 ## Validation
 
-The local suite has 21 browser tests, server tests with the race detector, static checks, type checks, and bundle verification. See [verification details](docs/検証結果.md), [design notes](docs/設計と検証.md), and the [changelog](CHANGELOG.md) in Japanese for the exact scope and remaining acceptance items. GitHub Actions results should be checked separately from local results.
+The local suite has 23 browser tests, server tests with the race detector, static checks, type checks, and bundle verification. See [verification details](docs/検証結果.md), [design notes](docs/設計と検証.md), and the [changelog](CHANGELOG.md) in Japanese for the exact scope and remaining acceptance items. GitHub Actions results should be checked separately from local results.
 
 ## License
 

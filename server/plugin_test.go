@@ -218,6 +218,7 @@ func TestPostAuthorizationAndFiltering(t *testing.T) {
 		{"permission denied", func(_ *Plugin, f *fakeAPI, _, _ string) { f.denyPermission = true }, "403"},
 		{"deleted", func(_ *Plugin, f *fakeAPI, _, id string) { f.posts[id].DeleteAt = 1 }, "404"},
 		{"system post", func(_ *Plugin, f *fakeAPI, _, id string) { f.posts[id].Type = "system_join_channel" }, "404"},
+		{"other custom type", func(_ *Plugin, f *fakeAPI, _, id string) { f.posts[id].Type = "custom_other_plugin" }, "404"},
 		{"channel outside scope", func(p *Plugin, _ *fakeAPI, _, _ string) { p.config.ChannelIDs = model.NewId() }, "404"},
 		{"expired post", func(_ *Plugin, f *fakeAPI, _, id string) {
 			f.posts[id].CreateAt = time.Now().Add(-31 * 24 * time.Hour).UnixMilli()
@@ -235,6 +236,14 @@ func TestPostAuthorizationAndFiltering(t *testing.T) {
 				t.Fatal("filtered write")
 			}
 		})
+	}
+}
+func TestQuotedReplyIsTracked(t *testing.T) {
+	p, f, _, v, id := fixture()
+	f.posts[id].Type = quotedReplyType
+	w := call(p, v, "POST", "/api/v1/seen", batchBody(id))
+	if strings.Contains(w.Body.String(), `"`+id+`":404`) || len(f.values) == 0 {
+		t.Fatal(w.Code, w.Body.String())
 	}
 }
 func TestOwnPostAndRemovedMember(t *testing.T) {

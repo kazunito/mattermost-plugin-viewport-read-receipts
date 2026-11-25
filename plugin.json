@@ -2,7 +2,7 @@
   "id": "com.nito.viewport-read-receipts",
   "name": "Viewport Read Receipts",
   "description": "Web・デスクトップで投稿が前面に連続表示されたことを記録します。読了・理解・対応を証明しません。モバイルアプリは対象外。",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "min_server_version": "12.0.1",
   "server": {
     "executables": {

@@ -18,6 +18,12 @@ import (
 const pluginID = "com.nito.viewport-read-receipts"
 const maxBatch = 50
 
+// Posts of the Quote Reply plugin (com.nito.quote-reply) are tracked like
+// standard posts; system messages and other custom types are not.
+const quotedReplyType = "custom_quote_reply"
+
+func trackableType(t string) bool { return t == "" || t == quotedReplyType }
+
 // receipt contains no view timestamps, client identifiers, or message contents.
 type receipt struct {
 	UserIDs       []string `json:"user_ids"`
@@ -86,7 +92,7 @@ func (p *Plugin) accessiblePost(userID, postID string, c configuration) (*model.
 	if !p.API.HasPermissionToChannel(userID, post.ChannelId, model.PermissionReadChannel) {
 		return nil, http.StatusForbidden
 	}
-	if !c.allows(post.ChannelId) || post.Type != "" || post.CreateAt <= 0 || expiry(post, c) <= time.Now().UnixMilli() {
+	if !c.allows(post.ChannelId) || !trackableType(post.Type) || post.CreateAt <= 0 || expiry(post, c) <= time.Now().UnixMilli() {
 		return nil, http.StatusNotFound
 	}
 	return post, http.StatusOK

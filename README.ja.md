@@ -39,7 +39,7 @@ Team Edition 12.0.1を対象に作成した独自プラグインです。チャ�
 | Web・デスクトップ | 同じWebプラグインで対応する設計。実デスクトップアプリは未検証 |
 | スマートフォンのネイティブアプリ | 対象外。モバイルアプリのセッションからの記録要求も拒否 |
 | スマートフォンのWebブラウザ | 同じWebアプリがプラグインをロードした場合は動作対象。ネイティブアプリと区別する |
-| システム投稿・独自のカスタム投稿タイプ | 対象外。標準投稿（typeが空）のみ |
+| システム投稿・独自のカスタム投稿タイプ | 対象外。標準投稿（typeが空）と、Quote Reply プラグインの引用返信（`custom_quote_reply`）のみ |
 | 検索結果・保存済み投稿等の特殊表示 | 表示記録の対象外。通常／スレッドのコンテナ以外では記録しない |
 | 変更された本文 | 投稿ID単位の記録を維持。編集後の再読を証明しない |
 | ネットワーク切断 | サーバー保存できた分のみ。再表示で再計測。未送信履歴を永続保存しない |
@@ -49,7 +49,7 @@ Team Edition 12.0.1を対象に作成した独自プラグインです。チャ�
 
 ## 導入
 
-[GitHub Releases](https://github.com/kazunito/mattermost-plugin-viewport-read-receipts/releases) から取得できます。詳細は [docs/導入と受入確認.md](docs/導入と受入確認.md) を参照してください。インストール用ファイルは `dist/com.nito.viewport-read-receipts-0.1.2.tar.gz` です。
+[GitHub Releases](https://github.com/kazunito/mattermost-plugin-viewport-read-receipts/releases) から取得できます。詳細は [docs/導入と受入確認.md](docs/導入と受入確認.md) を参照してください。インストール用ファイルは `dist/com.nito.viewport-read-receipts-0.1.3.tar.gz` です。
 
 初期状態では **TrackingEnabled=false** です。まず検証用チャネルだけを指定し、利用目的・対象・誰に何が見えるか・保存期間を利用者に説明したうえで有効化してください。サーバーの設定やプラグイン署名ポリシーによっては独自プラグインのアップロードが許可されていない場合があります。
 

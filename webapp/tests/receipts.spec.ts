@@ -161,3 +161,16 @@ test('保存先エラー時に100msごとの連続再送をしない',async({pag
  const mock=await setup(page,{failSeen:true});await expect.poll(()=>mock.seen.length).toBeGreaterThan(0);
  const before=mock.seen.length;await page.waitForTimeout(2300);expect(mock.seen.length).toBe(before);
 });
+test('Quote Replyの引用返信は記録し、その他の独自タイプは記録しない',async({page})=>{
+ const mock=await setup(page,{mode:'offscreen'});
+ await page.evaluate(v=>(window as any).test.postType(v,'custom_quote_reply'),p2);
+ await page.locator('#main-scroll').evaluate(el=>el.scrollTop=el.scrollHeight);
+ await expect.poll(()=>seen(mock,p2)).toBe(true);
+});
+test('システム投稿・他の独自タイプは表示されても記録しない',async({page})=>{
+ const mock=await setup(page,{mode:'offscreen'});
+ await page.evaluate(v=>(window as any).test.postType(v,'custom_other_plugin'),p2);
+ await page.locator('#main-scroll').evaluate(el=>el.scrollTop=el.scrollHeight);
+ await page.waitForTimeout(1500);
+ expect(seen(mock,p2)).toBe(false);
+});
